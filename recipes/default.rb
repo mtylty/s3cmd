@@ -31,26 +31,14 @@ end
 
 #deploy configuration for each user. Change s3cfg.erb template in your site cookbook to set 
 #you access key and secret. 
-if node[:s3cmd][:users].is_a?(Hash)
-  node[:s3cmd][:users].each do |user, home|
-    template "s3cfg" do
-      path "#{home}/.s3cfg"
-      source "s3cfg.erb"
-      user "#{user}"
-      group "#{user}"
-      mode 0600
-    end
-  end
-else
-  node[:s3cmd][:users].each do |user|
-    home = user.to_s == :root.to_s ? "/root" : "/home/#{user}"
+node[:s3cmd][:users].each do |user|
+  home = `getent passwd #{user} | awk -F: '{print $(NF - 1)}'`
 
-    template "s3cfg" do
-      path "#{home}/.s3cfg"
-      source "s3cfg.erb"
-      user "#{user}"
-      group "#{user}"
-      mode 0600
-    end
+  template "s3cfg" do
+    path "#{home}/.s3cfg"
+    source "s3cfg.erb"
+    user "#{user}"
+    group "#{user}"
+    mode 0600
   end
 end
